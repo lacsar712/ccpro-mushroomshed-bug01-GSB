@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 from marshmallow import ValidationError
@@ -8,7 +6,7 @@ from app.database import SessionLocal
 from app.models.climate_log import ClimateLog
 from app.models.room import Room
 from app.schemas.climate_log import ClimateLogCreateSchema, ClimateLogOutSchema
-from app.utils import climate_window_bounds, normalize_datetime, validation_error_response
+from app.utils import climate_window_bounds, normalize_datetime, utcnow, validation_error_response
 
 bp = Blueprint("climate_logs", __name__, url_prefix="/api/climate-logs")
 
@@ -41,7 +39,6 @@ def get_climate_log(log_id: int):
         if not item:
             return jsonify({"detail": "环境记录不存在"}), 404
         payload = out_schema.dump(item)
-        # BUG: inWindow uses utcnow bounds against wall-clock stored value
         since, now = climate_window_bounds()
         payload["inLast24h"] = bool(since <= item.recorded_at <= now)
         return jsonify(payload)
@@ -65,8 +62,7 @@ def create_climate_log():
         if raw.get("recordedAt"):
             recorded = normalize_datetime(data["recorded_at"])
         else:
-            # BUG: default path utcnow while normalize uses local now
-            recorded = datetime.utcnow()
+            recorded = utcnow()
         item = ClimateLog(
             room_id=data["room_id"],
             recorded_at=recorded,

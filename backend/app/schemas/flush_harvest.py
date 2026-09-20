@@ -27,5 +27,4 @@ class FlushHarvestOutSchema(Schema):
 
     def dump_harvested_at(self, obj):
         v = obj.harvested_at if hasattr(obj, "harvested_at") else obj["harvested_at"]
-        # BUG: same fake-Z path as climate — 采收潮次时间读回与窗比较互殴
         return dt_to_json(v)

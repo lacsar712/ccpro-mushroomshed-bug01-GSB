@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 from marshmallow import ValidationError
@@ -8,7 +6,7 @@ from app.database import SessionLocal
 from app.models.flush_harvest import FlushHarvest
 from app.models.room import Room
 from app.schemas.flush_harvest import FlushHarvestCreateSchema, FlushHarvestOutSchema
-from app.utils import normalize_datetime, validation_error_response
+from app.utils import normalize_datetime, utc_now, validation_error_response
 
 bp = Blueprint("flush_harvests", __name__, url_prefix="/api/flush-harvests")
 
@@ -48,7 +46,7 @@ def create_flush_harvest():
         if raw.get("harvestedAt"):
             harvested = normalize_datetime(data["harvested_at"])
         else:
-            harvested = datetime.utcnow()
+            harvested = utc_now()
         item = FlushHarvest(
             room_id=data["room_id"],
             harvested_at=harvested,
